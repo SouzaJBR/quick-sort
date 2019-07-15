@@ -1,65 +1,64 @@
 import random
 import time
-def pivot_select(array, low, high, method=1):
-    #print(low, high)
-    
-    if method == 1:
-        r = high
-    elif method == 2:
-        r = int(low + (high-low)/2)
-    elif method == 3:
-        r = random.randint(low, high)
-    elif method == 4:
+import datetime
 
-        low = low +1
-        r = high
-        while(True):
-            if  low > high:
-                break
-            if array[low] >= array[low -1]:
-                low = low +1
-            else:
-                r = low
-                break
-        
+
+def pivot_median(low, high, arr):
+    return int((low + high)/2)
+
+def pivot_highest(low, high, arr):
+    return high
+
+def pivot_random(low, high, arr):
+    return random.randint(low, high)
+
+def pivot_raul(low, high, arr):
+    low = low +1
+    r = high
+    while(True):
+        if  low > high:
+            break
+        if arr[low] >= arr[low -1]:
+            low = low +1
+        else:
+            r = low
+            break
+    
+    return r
+
+
+def pivot_select(array, low, high, method=pivot_highest):
+    
+    r = method(low, high, array)
     array[r], array[high] = array[high], array[r]
-        
+    
     return array[high]
 
-def partition(arr,low,high): 
+def partition(arr,low,high, pivot_method): 
     i = ( low-1 )         # index of smaller element 
-    pivot = pivot_select(arr, low, high, method=4)     # pivot 
+    pivot = pivot_select(arr, low, high, method=pivot_method)     # pivot 
   
     for j in range(low , high): 
-  
-        # If current element is smaller than or 
-        # equal to pivot 
+
         if   arr[j] <= pivot: 
           
-            # increment index of smaller element 
+
             i = i+1 
             arr[i],arr[j] = arr[j],arr[i] 
   
     arr[i+1],arr[high] = arr[high],arr[i+1] 
     return ( i+1 ) 
   
-# The main function that implements QuickSort 
-# arr[] --> Array to be sorted, 
-# low  --> Starting index, 
-# high  --> Ending index 
-  
-# Function to do Quick sort 
-def quickSort(arr,low,high): 
+ 
+def quickSort(arr,low,high, pivot_method): 
     if low < high: 
   
-        # pi is partitioning index, arr[p] is now 
-        # at right place 
-        pi = partition(arr,low,high) 
+
+        pi = partition(arr,low,high, pivot_method) 
   
-        # Separately sort elements before 
-        # partition and after partition 
-        quickSort(arr, low, pi-1) 
-        quickSort(arr, pi+1, high) 
+
+        quickSort(arr, low, pi-1, pivot_method) 
+        quickSort(arr, pi+1, high, pivot_method) 
 
 
 def randomize(arr, level):
@@ -78,20 +77,62 @@ def create_array(size):
     return list(range(1, size+1))
 
 
-arr = create_array(100000)
-#print(arr)
-randomize(arr, 0.9)
-#print(arr)
+def run_test(arrays,random_level, pivot_method):
 
-n = len(arr)
+    timedeltas = []
+    array_size = len(arrays[0])
 
-import datetime
-started = datetime.datetime.now()
-quickSort(arr,0,n-1)
-ended = datetime.datetime.now()
-print ("Sorted array was: "  + str(ended - started))
+    for i in range(0,10):
+        
+        array = list(arrays[i])
+        started = datetime.datetime.now()
+        quickSort(array, 0, array_size - 1, pivot_method)
+        ended = datetime.datetime.now()
 
-arr2 = list(arr)
-arr2.sort()
-print(str(arr == arr2))
-#print(arr)
+        arr2 = list(array)
+        assert(array == arr2)
+        
+        timedeltas.append(ended - started)
+        
+    average_timedelta = sum(timedeltas, datetime.timedelta(0)) / len(timedeltas)
+
+    print("Quicksort ==> Array Size: %d | Random Level: %f | Pivot-Method: %s | Average Time: %s" % (array_size, random_level, pivot_method, average_timedelta))
+    
+def main():
+
+    for array_size in [10,100,1000,10000, 100000]:
+        for random_level in [0.5, 1, 2]:
+
+            arrays = []
+
+            for _ in range(0,10):
+                array = create_array(array_size)
+                randomize(array, random_level)
+                arrays.append(array)
+
+            for pivot_method in [pivot_highest, pivot_median, pivot_random, pivot_raul]:
+                run_test(arrays, random_level, pivot_method)
+
+if __name__ == "__main__":
+    main()
+
+
+
+# arr = create_array(100000)
+# #print(arr)
+
+# #print(arr)
+
+# n = len(arr)
+
+
+# started = datetime.datetime.now()
+
+# ended = datetime.datetime.now()
+# print ("Sorted array was: "  + str(ended - started))
+
+# arr2 = list(arr)
+# arr2.sort()
+# print(str(arr == arr2))
+# #print(arr)
+# print(PIVOT_CHOICE)
